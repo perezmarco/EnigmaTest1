@@ -14,38 +14,42 @@ class Solution(object):
     self._in_filename = in_filename
     self._out_filename = out_filename
     self._state_filename = state_filename
-    
   
-  def create_dict(self):
-    in_file = open(self._in_filename, 'r')
-    state_file = open(self._state_filename, 'r')
-    out_file = open(self._out_filename, 'w')
-    in_reader = csv.DictReader(in_file)
-    state_reader = csv.DictReader(state_file)
-    out_writer = csv.DictWriter(out_file, in_reader.fieldnames)
+  def create_csv_reader(self, filename):
+    file_obj = open(filename, 'r')
+    reader = csv.DictReader(file_obj)
+    return reader
+
+  def create_csv_writer(self, filename, fieldnames): # we could add **kwargs to make use of the csv writer settings 
+    file_obj = open(self._out_filename, 'w')
+    writer = csv.DictWriter(file_obj, fieldnames)  
+    return writer
+      
+  
+  def solve_test1(self):
+    in_reader = self.create_csv_reader(self._in_filename)
+
+    state_reader = self.create_csv_reader(self._state_filename)
+    state_dict = dict([ state.values() for state in state_reader ])
+
+    out_writer = self.create_csv_writer(self._out_filename, in_reader.fieldnames) 
     out_writer.writeheader()
-    state_dict = {}
-    for state in state_reader:
-      state_tuple = state.values()
-      state_dict[state_tuple[0]] = state_tuple[1]
 
     for curr_dict in in_reader:
       new_dict = {}
-      for k in curr_dict.keys():
-        if k == 'bio':
-          new_dict[k] = " ".join(curr_dict[k].split())
-        elif k == 'state':
-          new_dict[k] = state_dict[curr_dict[k]]
+      for key in curr_dict.keys():
+        if key == 'bio':
+          new_dict['bio'] = " ".join(curr_dict['bio'].split()) #Space-delimited formatting of bio
+        elif key == 'state':
+          new_dict['state'] = state_dict[curr_dict['state']]
         else:
-          new_dict[k] = curr_dict[k]
-      print new_dict.items()
+          new_dict[key] = curr_dict[key]
       out_writer.writerow(new_dict)
-    out_file.close()
-    in_file.close()
+      #after this function is done, all file objects are destroyed
   
 def main():
-  s = Solution()
-  s.create_dict()
+  ans = Solution()
+  ans.solve_test1()
 
 
 
