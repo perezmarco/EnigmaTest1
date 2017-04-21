@@ -14,33 +14,18 @@ class Solution(object):
                        'output': out_filename,
                        'state' : state_filename }
   
-  def _create_csv_reader(self, filename):
-    file_obj = open(self.file_dict[filename], 'r')
-    reader = DictReader(file_obj)
-    return reader
-
-  # we could add **kwargs to make use of the csv writer settings 
-  def _create_csv_writer(self, filename, fieldnames): 
-    file_obj = open(self.file_dict[filename], 'w')
-    writer = DictWriter(file_obj, fieldnames)  
-    return writer
-
   def _instantiate_csv(self, ftype, mode, fields=None):
     file_obj = open(self.file_dict[ftype], mode)
     r_flag = 'r' in mode
     w_flag = 'w' in mode
+
     if r_flag and w_flag:
       file_obj.close()
       raise ValueError('Choose Either Read or Write Mode')    
-    csv_instance = DictWriter if write_flag else DictReader
+
+    csv_instance = DictWriter if w_flag else DictReader
     return csv_instance(file_obj, fieldnames=fields)
 
-  def date_formats(self, datestring):
-    """
-      %b/%B/%m/%-m %d/%-d %y/%Y
-    """
-    pass
-      
   def solve_test1(self):
     in_reader = self._instantiate_csv('input', 'r')
     state_reader = self._instantiate_csv('state', 'r')
