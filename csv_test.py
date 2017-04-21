@@ -1,5 +1,5 @@
 import os
-import csv
+from csv import DictReader, DictWriter
 import sys
 
 class Solution(object):
@@ -9,47 +9,54 @@ class Solution(object):
       in_filename = 'test.csv',
       out_filename = 'solution.csv',
       state_filename = 'state_abbreviations.csv'):
-    self._in_filename = in_filename
-    self._out_filename = out_filename
-    self._state_filename = state_filename
+
+    self.file_dict = { 'input' : in_filename,
+                       'output': out_filename,
+                       'state' : state_filename }
   
   def _create_csv_reader(self, filename):
-    file_obj = open(filename, 'r')
-    reader = csv.DictReader(file_obj)
+    file_obj = open(self.file_dict[filename], 'r')
+    reader = DictReader(file_obj)
     return reader
 
-  def _create_csv_writer(self, filename, fieldnames): # we could add **kwargs to make use of the csv writer settings 
-    file_obj = open(self._out_filename, 'w')
-    writer = csv.DictWriter(file_obj, fieldnames)  
+  # we could add **kwargs to make use of the csv writer settings 
+  def _create_csv_writer(self, filename, fieldnames): 
+    file_obj = open(self.file_dict[filename], 'w')
+    writer = DictWriter(file_obj, fieldnames)  
     return writer
+
+  def _instantiate_csv(self, ftype, mode, fields=None):
+    file_obj = open(self.file_dict[ftype], mode)
+    r_flag = 'r' in mode
+    w_flag = 'w' in mode
+    if r_flag and w_flag:
+      file_obj.close()
+      raise ValueError('Choose Either Read or Write Mode')    
+    csv_instance = DictWriter if write_flag else DictReader
+    return csv_instance(file_obj, fieldnames=fields)
+
+  def date_formats(self, datestring):
+    """
+      %b/%B/%m/%-m %d/%-d %y/%Y
+    """
+    pass
       
-  
   def solve_test1(self):
-    in_reader = self._create_csv_reader(self._in_filename)
-
-    state_reader = self._create_csv_reader(self._state_filename)
-    state_dict = dict([ state.values() for state in state_reader ])
-
-    out_writer = self._create_csv_writer(self._out_filename, in_reader.fieldnames) 
+    in_reader = self._instantiate_csv('input', 'r')
+    state_reader = self._instantiate_csv('state', 'r')
+    out_writer = self._instantiate_csv('output', 'w', in_reader.fieldnames) 
+    state_dict = {state.values()[0] : state.values()[1] for state in state_reader }
     out_writer.writeheader()
 
     for curr_dict in in_reader:
-      new_dict = {}
-      for key in curr_dict.keys():
-        if key == 'bio':
-          new_dict['bio'] = " ".join(curr_dict['bio'].split()) #Space-delimited formatting of bio
-        elif key == 'state':
-          new_dict['state'] = state_dict[curr_dict['state']] #Replacing state abbreviations
-        else:
-          new_dict[key] = curr_dict[key]
+      new_dict = { key : value for key, value in curr_dict.items() }
+      new_dict['state'] = state_dict[new_dict['state']] 
+      new_dict['bio'] = " ".join(new_dict['bio'].split()) 
       out_writer.writerow(new_dict)
-      #after this function is done, all file objects are destroyed
   
 def main():
   ans = Solution()
   ans.solve_test1()
-
-
 
 if __name__ == "__main__":
   main()
